@@ -1,0 +1,392 @@
+
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Nexora Analytics – dashboard interactiv demonstrativ, MP Creative Studio.">
+<title>Nexora Analytics | Business Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+<style>
+:root{
+--bg:#f5f6fb;--navy:#171b35;--side:#12162e;--purple:#7259e8;
+--blue:#5685ee;--text:#252942;--muted:#8a90a5;--line:#e8eaf3;
+--green:#239b76;--red:#d86178
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif}
+button,select{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:242px;background:var(--side);color:white;padding:28px 17px;position:fixed;inset:0 auto 0 0;display:flex;flex-direction:column;z-index:10}
+.brand{font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;font-size:21px;padding:8px 12px 38px}
+.brand span{color:#a898ff}
+.side-label{font-size:10px;letter-spacing:2px;color:#777f9d;margin:10px 12px}
+.side-link{display:flex;align-items:center;gap:12px;padding:14px;border-radius:10px;font-size:13px;color:#aeb5d2;margin:4px 0;text-decoration:none}
+.side-link.active,.side-link:hover{background:#28244e;color:white}
+.side-link b{font-size:18px;font-weight:400}
+.side-footer{margin-top:auto;border-top:1px solid #ffffff1a;padding:20px 12px 0;color:#8f98b6;font-size:11px;line-height:1.8}
+.main{margin-left:242px;width:calc(100% - 242px);padding:28px 35px 45px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:29px}
+.topbar h1{font-family:"Plus Jakarta Sans",sans-serif;font-size:27px;margin:0 0 6px}
+.subtitle{color:var(--muted);font-size:12px}
+.top-right{display:flex;align-items:center;gap:12px}
+.demo-tag{background:#eae6ff;color:#6c53c8;padding:9px 12px;border-radius:20px;font-size:10px;font-weight:800}
+.avatar{width:38px;height:38px;background:#ddd5ff;border-radius:50%;display:grid;place-items:center;color:#6347b7;font-weight:800}
+.filters{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-bottom:22px}
+.filter-controls{display:flex;gap:10px;flex-wrap:wrap}
+select,.export-btn{background:white;border:1px solid var(--line);padding:12px 15px;border-radius:9px;color:var(--text);font-size:12px}
+.export-btn{background:var(--purple);color:white;font-weight:700;border-color:var(--purple)}
+.export-btn:hover{background:#5e45d0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:17px;margin-bottom:20px}
+.card{background:white;border:1px solid var(--line);border-radius:15px;padding:23px;box-shadow:0 3px 15px #20264b04}
+.kpi-top{display:flex;justify-content:space-between;align-items:center}
+.kpi-icon{width:42px;height:42px;border-radius:11px;background:#f0ecff;display:grid;place-items:center;font-size:20px}
+.kpi-label{font-size:12px;color:var(--muted);margin:15px 0 9px}
+.kpi-value{font-family:"Plus Jakarta Sans",sans-serif;font-size:25px;font-weight:800;letter-spacing:-1px}
+.kpi-note{font-size:11px;color:var(--muted);margin-top:10px}
+.charts{display:grid;grid-template-columns:1.65fr 1fr;gap:18px;margin-bottom:19px}
+.card-title{font-family:"Plus Jakarta Sans",sans-serif;font-size:15px;font-weight:800;margin:0 0 5px}
+.card-desc{font-size:11px;color:var(--muted);margin-bottom:24px}
+.chart-box{height:275px;position:relative}
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;white-space:nowrap;text-align:left}
+th{background:#f8f8fc;color:#8d91a5;font-size:10px;text-transform:uppercase;letter-spacing:.7px;padding:15px}
+td{padding:16px 15px;font-size:12px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+.status{display:inline-block;border-radius:20px;padding:6px 10px;font-size:10px;font-weight:700}
+.status.done{background:#e5f6ef;color:#21835f}
+.status.pending{background:#fff2dc;color:#b67c21}
+.status.cancelled{background:#fce9ee;color:#b94e66}
+.report-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:18px}
+.footer{text-align:center;color:var(--muted);font-size:11px;padding-top:20px}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:24px}
+@media(max-width:1150px){
+.kpis{grid-template-columns:repeat(2,1fr)}
+.charts,.bottom-grid{grid-template-columns:1fr}
+}
+@media(max-width:750px){
+.sidebar{position:static;width:100%;padding:14px}
+.app{display:block}
+.brand{padding:5px 8px 12px}
+.side-label,.side-footer{display:none}
+.side-nav{display:flex;overflow-x:auto;gap:5px}
+.side-link{white-space:nowrap;padding:10px;font-size:11px}
+.main{margin:0;width:100%;padding:22px 14px}
+.topbar h1{font-size:22px}
+.chart-box{height:240px}
+}
+@media(max-width:420px){
+.kpis{grid-template-columns:1fr}
+.top-right{gap:6px}
+.demo-tag{font-size:9px}
+.card{padding:17px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<aside class="sidebar">
+<div class="brand">NEXORA <span>✦</span></div>
+<div class="side-label">WORKSPACE</div>
+<div class="side-nav">
+<a class="side-link active" href="#dashboard"><b>▦</b> Dashboard</a>
+<a class="side-link" href="#sales"><b>▥</b> Analiză vânzări</a>
+<a class="side-link" href="#reports"><b>▤</b> Rapoarte</a>
+<a class="side-link" href="#orders"><b>◈</b> Comenzi</a>
+</div>
+<div class="side-footer">
+<strong>NEXORA ANALYTICS</strong><br>
+Business Intelligence Demo<br>
+MP Creative Studio · 2026
+</div>
+</aside>
+
+<main class="main" id="dashboard">
+<div class="topbar">
+<div>
+<h1>Business Overview</h1>
+<div class="subtitle">Monitorizarea performanței companiei · Date demonstrative</div>
+</div>
+<div class="top-right">
+<span class="demo-tag">● DEMO MODE</span>
+<div class="avatar">MP</div>
+</div>
+</div>
+
+<div class="filters">
+<div class="filter-controls">
+<select id="periodFilter" aria-label="Perioadă">
+<option value="all">Toate perioadele</option>
+<option value="30">Ultimele 30 de zile</option>
+<option value="90">Ultimele 90 de zile</option>
+<option value="180">Ultimele 180 de zile</option>
+</select>
+<select id="categoryFilter" aria-label="Categorie">
+<option value="all">Toate categoriile</option>
+<option value="Beauty">Beauty</option>
+<option value="Home">Home & Living</option>
+<option value="Fashion">Fashion</option>
+<option value="Electronics">Electronics</option>
+</select>
+</div>
+<button class="export-btn" id="exportBtn">↓ EXPORTĂ RAPORT CSV</button>
+</div>
+
+<div class="kpis">
+<div class="card">
+<div class="kpi-top"><span class="kpi-icon">💰</span><span class="demo-tag">VENITURI</span></div>
+<div class="kpi-label">Venituri din comenzi finalizate</div>
+<div class="kpi-value" id="revenueKpi">—</div>
+<div class="kpi-note">Total pentru filtrele selectate</div>
+</div>
+<div class="card">
+<div class="kpi-top"><span class="kpi-icon">🛍️</span><span class="demo-tag">COMENZI</span></div>
+<div class="kpi-label">Număr total comenzi</div>
+<div class="kpi-value" id="ordersKpi">—</div>
+<div class="kpi-note">Include toate statusurile</div>
+</div>
+<div class="card">
+<div class="kpi-top"><span class="kpi-icon">📈</span><span class="demo-tag">PROFIT</span></div>
+<div class="kpi-label">Profit estimat din comenzi finalizate</div>
+<div class="kpi-value" id="profitKpi">—</div>
+<div class="kpi-note">Calculat din marja demonstrativă</div>
+</div>
+<div class="card">
+<div class="kpi-top"><span class="kpi-icon">🎯</span><span class="demo-tag">CONVERSIE</span></div>
+<div class="kpi-label">Rată comenzi finalizate</div>
+<div class="kpi-value" id="conversionKpi">—</div>
+<div class="kpi-note">Comenzi finalizate / total comenzi</div>
+</div>
+</div>
+
+<div class="charts" id="sales">
+<div class="card">
+<h2 class="card-title">Evoluția veniturilor</h2>
+<div class="card-desc">Venituri din comenzi finalizate, grupate pe lună</div>
+<div class="chart-box"><canvas id="revenueChart"></canvas></div>
+</div>
+<div class="card">
+<h2 class="card-title">Distribuția vânzărilor</h2>
+<div class="card-desc">Venituri pe categorii de produse</div>
+<div class="chart-box"><canvas id="categoryChart"></canvas></div>
+</div>
+</div>
+
+<div class="bottom-grid" id="reports">
+<div class="card">
+<h2 class="card-title">Performanță pe categorii</h2>
+<div class="card-desc">Comparație venituri și profit estimat</div>
+<div class="chart-box"><canvas id="performanceChart"></canvas></div>
+</div>
+<div class="card">
+<h2 class="card-title">Statusul comenzilor</h2>
+<div class="card-desc">Numărul comenzilor pe fiecare status</div>
+<div class="chart-box"><canvas id="statusChart"></canvas></div>
+</div>
+</div>
+
+<div class="card" id="orders">
+<div class="report-head">
+<div>
+<h2 class="card-title">Raport comenzi</h2>
+<div class="card-desc" style="margin:7px 0 0">Tranzacții fictive, filtrate după perioadă și categorie</div>
+</div>
+<span class="demo-tag" id="rowCount">0 COMENZI</span>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>ID comandă</th><th>Data</th><th>Categorie</th><th>Valoare</th><th>Profit estimat</th><th>Status</th></tr>
+</thead>
+<tbody id="ordersBody"></tbody>
+</table>
+</div>
+</div>
+
+<div class="footer">
+NEXORA ANALYTICS · Proiect demonstrativ · Date fictive · MP Creative Studio © 2026
+</div>
+</main>
+</div>
+
+<script>
+const categories=["Beauty","Home","Fashion","Electronics"];
+const margins={Beauty:.38,Home:.29,Fashion:.34,Electronics:.21};
+const colors={Beauty:"#7259e8",Home:"#5685ee",Fashion:"#e5a1b8",Electronics:"#f1b86b"};
+const statuses=["Finalizată","Finalizată","Finalizată","Finalizată","În așteptare","Anulată"];
+const now=new Date();
+now.setHours(12,0,0,0);
+
+const orders=Array.from({length:240},(_,i)=>{
+const category=categories[(i*7+Math.floor(i/11))%4];
+const date=new Date(now);
+date.setDate(date.getDate()-((i*13+Math.floor(i/7)*5)%240));
+const value=70+((i*47+Math.floor(i/9)*83)%900);
+const status=statuses[(i*5+Math.floor(i/4))%statuses.length];
+return{
+id:"NX-"+String(1001+i),
+date,
+category,
+value,
+profit:status==="Finalizată"?Math.round(value*margins[category]):0,
+status
+};
+});
+
+const money=n=>new Intl.NumberFormat("ro-RO",{style:"currency",currency:"RON",maximumFractionDigits:0}).format(n);
+const num=n=>new Intl.NumberFormat("ro-RO").format(n);
+const dateLabel=d=>d.toLocaleDateString("ro-RO");
+const monthKey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+const monthLabel=key=>{
+const [y,m]=key.split("-").map(Number);
+return new Date(y,m-1,1).toLocaleDateString("ro-RO",{month:"short",year:"2-digit"});
+};
+
+let charts={};
+
+function filteredOrders(){
+const period=document.getElementById("periodFilter").value;
+const category=document.getElementById("categoryFilter").value;
+const cutoff=new Date(now);
+if(period!=="all")cutoff.setDate(cutoff.getDate()-Number(period));
+return orders.filter(o=>
+(period==="all"||o.date>=cutoff)&&
+(category==="all"||o.category===category)
+);
+}
+
+function makeChart(id,type,labels,datasets,options={}){
+if(charts[id])charts[id].destroy();
+const canvas=document.getElementById(id);
+if(typeof Chart==="undefined"){
+canvas.replaceWith(document.createTextNode("Graficele necesită încărcarea bibliotecii Chart.js."));
+return;
+}
+charts[id]=new Chart(canvas,{
+type,
+data:{labels,datasets},
+options:{
+responsive:true,
+maintainAspectRatio:false,
+plugins:{
+legend:{display:options.legend??false,position:"bottom",labels:{usePointStyle:true,boxWidth:9,padding:15}},
+tooltip:{callbacks:{label:context=>{
+const v=context.parsed.y??context.parsed;
+return context.dataset.label+": "+(options.money?money(v):num(v));
+}}}
+},
+scales:options.scales===false?{}:{
+x:{grid:{display:false},ticks:{color:"#8a90a5",font:{size:10}}},
+y:{beginAtZero:true,grid:{color:"#f0f0f6"},ticks:{color:"#8a90a5",font:{size:10}}}
+},
+...options,
+}
+});
+}
+
+function render(){
+const data=filteredOrders();
+const done=data.filter(o=>o.status==="Finalizată");
+const revenue=done.reduce((sum,o)=>sum+o.value,0);
+const profit=done.reduce((sum,o)=>sum+o.profit,0);
+document.getElementById("revenueKpi").textContent=money(revenue);
+document.getElementById("ordersKpi").textContent=num(data.length);
+document.getElementById("profitKpi").textContent=money(profit);
+document.getElementById("conversionKpi").textContent=data.length?
+(done.length/data.length*100).toFixed(1)+"%":"0%";
+document.getElementById("rowCount").textContent=data.length+" COMENZI";
+
+const months=[...new Set(data.map(o=>monthKey(o.date)))].sort();
+const monthly=months.map(key=>done.filter(o=>monthKey(o.date)===key).reduce((s,o)=>s+o.value,0));
+makeChart("revenueChart","line",months.map(monthLabel),[{
+label:"Venituri",data:monthly,borderColor:"#7259e8",backgroundColor:"#7259e820",
+fill:true,tension:.35,pointRadius:3,borderWidth:3
+}],{money:true});
+
+const catRevenue=categories.map(c=>done.filter(o=>o.category===c).reduce((s,o)=>s+o.value,0));
+const catProfit=categories.map(c=>done.filter(o=>o.category===c).reduce((s,o)=>s+o.profit,0));
+makeChart("categoryChart","doughnut",categories,[{
+label:"Venituri",data:catRevenue,backgroundColor:categories.map(c=>colors[c]),
+borderWidth:4,borderColor:"#fff"
+}],{legend:true,scales:false,money:true,cutout:"68%"});
+
+makeChart("performanceChart","bar",categories,[
+{label:"Venituri",data:catRevenue,backgroundColor:"#7259e8",borderRadius:5},
+{label:"Profit estimat",data:catProfit,backgroundColor:"#91b1f4",borderRadius:5}
+],{legend:true,money:true});
+
+const labels=["Finalizată","În așteptare","Anulată"];
+const counts=labels.map(s=>data.filter(o=>o.status===s).length);
+makeChart("statusChart","bar",labels,[{
+label:"Comenzi",data:counts,backgroundColor:["#239b76","#f1b86b","#d86178"],borderRadius:7
+}]);
+
+const body=document.getElementById("ordersBody");
+body.innerHTML="";
+const sorted=[...data].sort((a,b)=>b.date-a.date);
+if(!sorted.length){
+const tr=document.createElement("tr");
+const td=document.createElement("td");
+td.colSpan=6;
+td.className="empty";
+td.textContent="Nu există comenzi pentru filtrele selectate.";
+tr.appendChild(td);
+body.appendChild(tr);
+}
+sorted.forEach(o=>{
+const tr=document.createElement("tr");
+const fields=[o.id,dateLabel(o.date),o.category,money(o.value),money(o.profit)];
+fields.forEach(value=>{
+const td=document.createElement("td");
+td.textContent=value;
+tr.appendChild(td);
+});
+const td=document.createElement("td");
+const span=document.createElement("span");
+span.className="status "+(o.status==="Finalizată"?"done":o.status==="Anulată"?"cancelled":"pending");
+span.textContent=o.status;
+td.appendChild(span);
+tr.appendChild(td);
+body.appendChild(tr);
+});
+}
+
+document.getElementById("periodFilter").addEventListener("change",render);
+document.getElementById("categoryFilter").addEventListener("change",render);
+
+document.getElementById("exportBtn").addEventListener("click",()=>{
+const data=filteredOrders();
+const rows=[
+["ID","Data","Categorie","Valoare RON","Profit estimat RON","Status"],
+...[...data].sort((a,b)=>b.date-a.date).map(o=>
+[o.id,dateLabel(o.date),o.category,o.value,o.profit,o.status])
+];
+const csv="\uFEFF"+rows.map(row=>row.map(value=>
+'"'+String(value).replace(/"/g,'""')+'"'
+).join(";")).join("\r\n");
+const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+const url=URL.createObjectURL(blob);
+const link=document.createElement("a");
+link.href=url;
+link.download="nexora-analytics-report.csv";
+document.body.appendChild(link);
+link.click();
+link.remove();
+setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+
+document.querySelectorAll(".side-link").forEach(link=>{
+link.addEventListener("click",()=>{
+document.querySelectorAll(".side-link").forEach(l=>l.classList.remove("active"));
+link.classList.add("active");
+});
+});
+
+render();
+</script>
+</body>
+</html>
